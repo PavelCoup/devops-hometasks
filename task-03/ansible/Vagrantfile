@@ -1,0 +1,17 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "pavelcoup/centos8"
+  config.vm.hostname = "learning-devops"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 81, host: 8081
+
+  config.vm.provision "file", source: "./playbook.yaml", destination: "/vagrant/playbook.yaml"
+  config.vm.synced_folder "../../task-01/sites", "/var/www/html", type: "rsync"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provision :ansible_local do |ansible|
+    ansible.playbook = 'playbook.yaml'
+    ansible.limit = 'all'
+    ansible.verbose        = true
+    ansible.install        = true
+  end
+end

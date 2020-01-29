@@ -1,0 +1,259 @@
+---
+- name: Main play
+  hosts: main
+  become: yes
+
+  tasks:
+    - name: install packages
+      become: yes
+      apt:
+        pkg:
+        - mc
+        - lxc
+        - lxc-templates
+        - python-pip
+        - lxc-dev
+        - sshpass
+        state: present
+
+    - name: install lxc-python2 
+      become: yes
+      pip:
+        name: lxc-python2
+
+    - name: Enable password authentification
+      become: yes
+      replace:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication no$'
+        replace: 'PasswordAuthentication yes'
+
+    - name: restart sshd service
+      become: yes
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: sshd
+
+    - name: past host_key_checking = no in ansible.cfg
+      become: yes      
+      lineinfile:
+        path: /etc/ansible/ansible.cfg
+        insertafter: '[defaults]'
+        line: host_key_checking = False
+    
+    - name: Insert defaulf config file lxc-net
+      become: yes
+      blockinfile:
+        path: /etc/default/lxc-net
+        block: |
+          LXC_DHCP_CONFILE=/etc/lxc/dnsmasq.conf
+          LXC_DOMAIN="lxc"
+
+    - name: Touch /etc/lxc/dnsmasq.conf
+      become: yes
+      file:
+        path: /etc/lxc/dnsmasq.conf
+        state: touch
+
+    - name: Insert config file dnsmasq
+      become: yes
+      blockinfile:
+        path: /etc/lxc/dnsmasq.conf
+        block: |
+          dhcp-host=00:16:3e:c6:61:b2,10.0.3.100
+          dhcp-host=00:16:3e:01:ba:c5,10.0.3.101
+
+    - name: restart service lxc-net on debian
+      become: yes
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: lxc-net
+
+    - name: Create a stopped container centos1
+      become: yes      
+      lxc_container:
+        name: centos1
+        container_log: true
+        template: download
+        state: stopped
+        template_options: -d centos -r 8 -a amd64
+
+    - name: Create a stopped container centos2
+      become: yes      
+      lxc_container:
+        name: centos2
+        container_log: true
+        template: download
+        state: stopped
+        template_options: -d centos -r 8 -a amd64
+    
+    - name: change passwords for root in lxc containers centos1 and centos2
+      become: yes
+      shell: |
+        sudo echo "root:root" | sudo chroot /var/lib/lxc/centos1/rootfs/ chpasswd
+        sudo echo "root:root" | sudo chroot /var/lib/lxc/centos2/rootfs/ chpasswd
+
+    - name: replace mac-address for centos1
+      become: yes
+      replace:
+        path: /var/lib/lxc/centos1/config
+        regexp: 'lxc\.net\.0\.hwaddr =*'
+        replace: 'lxc.net.0.hwaddr = 00:16:3e:c6:61:b2'
+
+    - name: replace mac-address for centos2
+      become: yes
+      replace:
+        path: /var/lib/lxc/centos2/config
+        regexp: 'lxc\.net\.0\.hwaddr =*'
+        replace: 'lxc.net.0.hwaddr = 00:16:3e:01:ba:c5'
+
+    - name: Start a container centos1
+      become: yes
+      lxc_container:
+        name: centos1
+        state: started
+
+    - name: Start a container centos2
+      become: yes
+      lxc_container:
+        name: centos2
+        state: started
+
+    - name: sleep 10s
+      become: yes
+      shell: |
+        sleep 10
+
+    - name: install openssh-server centos1
+      become: yes      
+      lxc_container:
+        name: centos1
+        state: started
+        container_command: |
+          yum -y install openssh-server
+          systemctl restart sshd
+
+    - name: install openssh-server centos2
+      become: yes
+      lxc_container:
+        name: centos2
+        state: started
+        container_command: |
+          yum -y install openssh-server
+          systemctl restart sshd
+
+    - name: change passwords for root in lxc containers centos1 and centos2
+      become: yes
+      shell: |
+        iptables -t nat -I PREROUTING -i enp0s3 -p tcp --dport 80 -j DNAT --to-destination 10.0.3.100:80
+        iptables -t nat -I PREROUTING -i enp0s3 -p tcp --dport 81 -j DNAT --to-destination 10.0.3.101:81
+
+
+
+
+- name: Containers play
+  hosts: containers
+  become: yes
+
+  tasks:
+    - name: install packages for containers
+      become: yes
+      yum:
+        pkg:
+        - mc
+        - httpd
+        - php
+        state: present
+      notify:
+      - Restart httpd
+
+
+    - name: Remove file welcome.conf
+      file:
+        path: /etc/httpd/conf.d/welcome.conf
+        state: absent
+      notify:
+      - Restart httpd
+
+  handlers:
+    - name: Restart httpd
+      become: yes
+      service:
+        name: httpd
+        state: restarted
+
+
+
+- name: Main play part 2
+  hosts: main
+  become: yes
+
+  tasks:
+    - name: copy demosite-static
+      copy:
+        src: /home/vagrant/sites/01-demosite-static
+        dest: /var/lib/lxc/centos1/rootfs/var/www/html
+
+    - name: copy demosite-php
+      copy:
+        src: /home/vagrant/sites/01-demosite-php
+        dest: /var/lib/lxc/centos2/rootfs/var/www/html
+
+    - name: Touch /var/lib/lxc/centos1/rootfs/etc/httpd/conf.d/01-demosite-static.conf
+      become: yes
+      file:
+        path: /var/lib/lxc/centos1/rootfs/etc/httpd/conf.d/01-demosite-static.conf
+        state: touch
+
+    - name: Insert config 01-demosite-static.conf
+      become: yes
+      blockinfile:
+        path: /var/lib/lxc/centos1/rootfs/etc/httpd/conf.d/01-demosite-static.conf
+        block: |
+          <VirtualHost *:80>
+                  ServerAdmin webmaster@localhost
+                  DocumentRoot /var/www/html/01-demosite-static
+                  DirectoryIndex index.html
+          </VirtualHost>
+
+    - name: Touch /var/lib/lxc/centos2/rootfs/etc/httpd/conf.d/01-demosite-php.conf
+      become: yes
+      file:
+        path: /var/lib/lxc/centos2/rootfs/etc/httpd/conf.d/01-demosite-php.conf
+        state: touch
+
+    - name: Insert config 01-demosite-php.conf
+      become: yes
+      blockinfile:
+        path: /var/lib/lxc/centos2/rootfs/etc/httpd/conf.d/01-demosite-php.conf
+        block: |
+          <VirtualHost *:81>
+                  ServerAdmin webmaster@localhost
+                  DocumentRoot /var/www/html/01-demosite-php
+                  DirectoryIndex index.php
+          </VirtualHost>
+    
+    - name: Add Apache port 81 to listen
+      become: yes
+      lineinfile:
+        path: /var/lib/lxc/centos2/rootfs/etc/httpd/conf/httpd.conf
+        # regexp: '^Listen '
+        insertafter: '^Listen '
+        line: Listen 81
+
+
+
+- name: Containers play part2
+  hosts: containers
+  become: yes    
+
+  tasks:    
+    - name: restart service httpd on centos
+      become: yes
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: httpd
+
