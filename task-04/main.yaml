@@ -1,0 +1,244 @@
+---
+- name: Main play
+  hosts: all
+  become: yes
+    
+  tasks:
+    - name: install packages
+      dnf:
+        pkg:
+        - mc
+        - vim
+        - nano
+        state: present
+    
+    - name: disable SELinux
+      shell: |
+        setenforce 0
+        sed -i 's/enforcing/disabled/g' /etc/selinux/config /etc/selinux/config
+
+    - name: Set timezone Europe/Minsk
+      command: /usr/bin/timedatectl set-timezone Europe/Minsk
+
+    - name: resolving nameserver
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          192.168.1.10 puppet master.puppet
+          192.168.1.11 slave1.puppet
+          192.168.1.12 slave2.puppet
+          192.168.1.13 mineserver.puppet
+
+    - name: Add EPEL YUm repository
+      dnf:
+        name: 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm'
+        state: present
+
+    - name: Add Puppet YUm repository
+      dnf:
+        name: 'https://yum.puppetlabs.com/puppet-release-el-8.noarch.rpm'
+        state: present
+
+    - name: Touch /etc/profile.d/mypuppet.ch
+      file:
+        path: /etc/profile.d/mypuppet.ch
+        state: touch
+
+    - name: PATH /opt/puppetlabs/puppet/bin for sudo
+      replace:
+        path: /etc/sudoers
+        regexp: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
+        replace: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin'
+
+    - name: PATH /opt/puppetlabs/puppet/bin for all users 
+      blockinfile:
+        path: /etc/profile.d/mypuppet.ch
+        block: |
+          export PATH=$PATH:/opt/puppetlabs/puppet/bin
+          export PATH=$PATH:/opt/puppetlabs/bin
+
+- name: Master play
+  hosts: master
+  become: yes
+
+  tasks:
+    - name: install puppetserver
+      dnf:
+        pkg:
+        - git
+        - puppetserver
+        state: present
+
+    - name: 1gb memory for puppetserver
+      replace:
+        path: /etc/sysconfig/puppetserver
+        regexp: '-Xms2g -Xmx2g'
+        replace: '-Xms1g -Xmx1g'
+
+    - name: enable puppetserver service
+      systemd:
+        name: puppetserver
+        enabled: yes
+    
+    - name: Create a directory /etc/puppetlabs/r10k if it does not exist
+      file:
+        path: /etc/puppetlabs/r10k
+        state: directory
+        mode: '0775'
+
+    - name: Touch /etc/puppetlabs/r10k/r10k.yaml
+      file:
+        path: /etc/puppetlabs/r10k/r10k.yaml
+        state: touch
+
+    - name: Insert config r10k
+      blockinfile:
+        path: /etc/puppetlabs/r10k/r10k.yaml
+        block: |
+          ---
+          :cachedir: '/var/cache/r10k'
+          :sources:
+            :my-org:
+              remote: 'https://github.com/PavelCoup/test_puppet_conf.git'
+              basedir: '/etc/puppetlabs/code/environments'
+
+    - name: Create a directory /var/cache/r10k if it does not exist
+      file:
+        path: /var/cache/r10k
+        state: directory
+        mode: '2775'
+
+    - name: setup gem r10k
+      shell: |
+        /opt/puppetlabs/puppet/bin/gem install r10k
+        /opt/puppetlabs/puppet/bin/r10k deploy environment -p
+
+    - name: Insert config master.puppet
+      blockinfile:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        block: |
+          dns_alt_names = puppet,master.puppet
+          [main]
+          certname = master.puppet
+          server = master.puppet
+          environment = production
+          runinterval = 1m
+
+    - name: Touch /etc/puppetlabs/puppet/autosign.conf
+      file:
+        path: /etc/puppetlabs/puppet/autosign.conf
+        state: touch
+
+    - name: Insert config autosign.conf
+      blockinfile:
+        path: /etc/puppetlabs/puppet/autosign.conf
+        block: |
+          *.puppet
+
+    - name: restart puppetserver service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: puppetserver
+
+    - name: enable puppet-agent service
+      systemd:
+        name: puppet
+        enabled: yes
+
+    - name: restart puppet-agent service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: puppet
+
+- name: Slaves play
+  hosts: slaves
+  become: yes
+
+  tasks:
+    - name: install puppet-agent
+      dnf:
+        pkg:
+        - puppet-agent
+        state: present
+
+    - name: enable puppet service
+      systemd:
+        name: puppet
+        enabled: yes
+
+- name: Slave1 play
+  hosts: slave1.vm
+  become: yes
+
+  tasks:
+    - name: Insert config puppet-agent slave1
+      blockinfile:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        block: |
+          [main]
+          certname = slave1.puppet
+          server = master.puppet
+          environment = production
+          runinterval = 1m
+
+- name: Slave2 play
+  hosts: slave2.vm
+  become: yes
+
+  tasks:
+    - name: Insert config puppet-agent slave2
+      blockinfile:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        block: |
+          [main]
+          certname = slave2.puppet
+          server = master.puppet
+          environment = production
+          runinterval = 1m
+
+- name: Mineserver play
+  hosts: mineserver.vm
+  become: yes
+
+  tasks:
+    - name: Insert config puppet-agent mineserver
+      blockinfile:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        block: |
+          [main]
+          certname = mineserver.puppet
+          server = master.puppet
+          environment = production
+          runinterval = 1m
+
+- name: Slaves play part2
+  hosts: slaves
+  become: yes
+
+  tasks:
+    - name: enable puppet-agent service
+      systemd:
+        name: puppet
+        enabled: yes
+
+    - name: restart puppet-agent service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: puppet
+
+
+# sudo /opt/puppetlabs/bin/puppetserver ca sign --all
+# /var/log/messages
+
+# setrlimit(RLIMIT_NOFILE, 1024) failed (13: Permission denied)
+# worker_rlimit_nofile 100000;
+# sudo setsebool -P httpd_can_network_connect 1
+# sudo setsebool -P httpd_setrlimit 1
+
+# sestatus
+# sudo setenforce 0
+# /etc/selinux/config 
+# SELINUX=disabled
