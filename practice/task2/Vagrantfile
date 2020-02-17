@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/buster64"
+
+  config.vm.provider "virtualbox" do |vb|
+    # Customize the amount of memory on the VM:
+    vb.memory = 1024
+    vb.cpus   = 1
+  end
+
+  config.vm.define "master.puppet.vm", primary: true do |master|
+    master.vm.hostname = "master.puppet.vm"
+    master.vm.network "private_network", ip: "192.168.50.5"
+  end
+
+  [
+    { index: 1, box: 'debian/buster64' },
+    { index: 2, box: 'centos/7' }
+  ].each do |item|
+    config.vm.define "slave#{item[:index]}.puppet.vm" do |slave|
+      slave.vm.box = item[:box]
+
+      slave.vm.hostname = "slave#{item[:index]}.puppet.vm"
+      slave.vm.network "private_network", ip: "192.168.50.#{9+item[:index]}"
+
+      slave.vm.provider("virtualbox") { |vb| vb.memory = 512 }
+    end
+  end
+
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "puppet.yaml"
+    ansible.groups   = {
+      "master" => ["master.puppet.vm"],
+      "slave" => ["slave1.puppet.vm", "slave2.puppet.vm"],
+      "slave:vars" => { "puppet_master": "192.168.50.5" }
+    }
+  end
+end

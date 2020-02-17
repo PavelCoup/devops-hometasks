@@ -1,0 +1,100 @@
+---
+- name: Main play
+  hosts: all
+  become: yes
+    
+  tasks:
+    - name: install packages
+      yum:
+        pkg:
+        - mc
+        - vim
+        - nano
+        - java-1.8.0-openjdk-devel
+        state: present
+    
+    - name: Ensure group "nexus" exists
+      group:
+        name: nexus
+        state: present
+
+    - name: Add the user 'nexus' with a specific uid and a primary group of 'nexus'
+      user:
+        name: nexus
+        uid: 1040
+        shell: /bin/bash
+        create_home: yes
+        home: /opt/nexus/
+        group: nexus
+        comment: John Doe
+
+    - name: set mod recursively ugo=rwx,ug+s /opt/nexus/
+      file:
+        path: /opt/nexus/
+        state: directory
+        mode: ugo=rwx,ug+s
+        owner: nexus
+        group: nexus
+        recurse: yes
+
+    - name: Download nexus3
+      get_url:
+        url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+        dest: /opt/nexus/latest-unix.tar.gz
+        mode: '0777'
+        owner: nexus
+        group: nexus
+
+    - name: Extract latest-unix.tar.gz into /opt/nexus/
+      unarchive:
+        src: /opt/nexus/latest-unix.tar.gz
+        dest: /opt/nexus/
+        mode: '0777'
+        owner: nexus
+        group: nexus
+
+    - name: set mod recursively ugo=rwx,ug+s /opt/nexus/
+      file:
+        path: /opt/nexus/
+        state: directory
+        mode: ugo=rwx,ug+s
+        owner: nexus
+        group: nexus
+        recurse: yes
+
+    - name: Touch /etc/systemd/system/nexus.service
+      file:
+        path: /etc/systemd/system/nexus.service
+        state: touch
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Insert config /etc/systemd/system/nexus.service
+      blockinfile:
+        path: /etc/systemd/system/nexus.service
+        block: |
+          [Unit]
+          Description=nexus-server
+          After=network.target
+
+          [Service]
+          Type=forking
+          LimitNOFILE=65536
+          WorkingDirectory=/opt/nexus
+          #SuccessExitStatus=143
+          User=nexus
+          Group=nexus
+          Restart=on-abort
+          ExecStart=/opt/nexus/nexus-3.20.1-01/bin/nexus start
+          ExecStop=/opt/nexus/nexus-3.20.1-01/bin/nexus stop
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: restart nexus service
+      systemd:
+        enabled: yes        
+        state: restarted
+        daemon_reload: yes
+        name: nexus

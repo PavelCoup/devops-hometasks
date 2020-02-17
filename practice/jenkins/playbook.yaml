@@ -1,0 +1,17 @@
+---
+- name: Main play
+  hosts: all
+  become: yes
+    
+  pre_tasks:
+    - name: install packages
+      yum:
+        pkg:
+        - mc
+        - vim
+        - nano
+        state: present
+    
+  roles:
+    - role: "/etc/ansible/roles/ansible-role-jenkins-master"
+    # - jenkins

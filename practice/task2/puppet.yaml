@@ -1,0 +1,116 @@
+---
+- name: Install official Puppet repos
+  hosts: all
+  become: true
+  tasks:
+    - name: Install repo (Debian)
+      apt:
+        deb: https://apt.puppet.com/puppet6-release-buster.deb
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Install repo (CentOS)
+      yum:
+        name: "https://yum.puppet.com/puppet6-release-el-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+        state: present
+      when: ansible_facts['distribution'] == "CentOS"
+
+- name: Configure Puppet master server
+  hosts: master
+  become: true
+  tasks:
+    - name: Install puppet and dependencies
+      apt:
+        pkg:
+        - vim
+        - puppetserver
+        - r10k
+        - git
+        state: present
+        update_cache: yes
+
+    - name: Reduce puppetserver memory usage
+      replace:
+        path: /etc/default/puppetserver
+        regexp: "-Xm(s|x)2g"
+        replace: '-Xm\g<1>512m'
+      notify: restart puppet server
+
+    - name: Remove invalid key
+      file:
+        path: /etc/puppetlabs/puppet/ssl/private_keys/master.localdomain.pem
+        state: absent
+
+    - name: Set puppet master autosign
+      ini_file:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        section: master
+        option: "autosign"
+        value: "true"
+
+    - name: Start puppetserver daemon
+      service:
+        name: puppetserver
+        state: started
+        enabled: true
+
+  handlers:
+    - name: restart puppet server
+      service:
+        name: puppetserver
+        state: restarted
+
+- name: Configure Puppet slave host
+  hosts: slave
+  become: true
+  tasks:
+    - name: Install puppet agent (Debian)
+      apt:
+        pkg: puppet-agent
+        state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Install puppet agent (CentOS)
+      yum:
+        pkg: puppet-agent
+        state: present
+        update_cache: yes
+      when: ansible_facts['distribution'] == "CentOS"
+
+    - name: Add master.puppet.vm to /etc/hosts
+      lineinfile: 
+        path: /etc/hosts
+        line: "{{ puppet_master }}	master.puppet.vm"
+        state: present
+
+- name: Setup host
+  hosts: all
+  become: true
+  tasks:
+    - name: Set puppet agent configuration
+      ini_file:
+        path: /etc/puppetlabs/puppet/puppet.conf
+        section: agent
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      with_items:
+        - { option: "server", value: "master.puppet.vm" }
+        - { option: "runinterval", value: "5m" }
+      notify: restart puppet
+
+    - name: Update puppet configuration
+      command: /opt/puppetlabs/puppet/bin/puppet agent -t
+      ignore_errors: yes
+
+    - name: Enable pupper service
+      service:
+        name: puppet
+        state: started
+        enabled: true
+
+  handlers:
+    - name: restart puppet
+      become: true
+      service:
+        name: puppet
+        state: restarted
