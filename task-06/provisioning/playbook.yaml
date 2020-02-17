@@ -11,6 +11,31 @@
       - nexus-artifact-uploader
       - publish-over-ssh
     jenkins_plugins_install_dependencies: true
+    jenkins_folders:
+      - dest: "{{ jenkins_home }}/jobs/BuildGo/"
+      - dest: "{{ jenkins_home }}/.ssl/"
+    jenkins_files:
+      - name: "golang config"
+        src: "/vagrant/roles/jenkins/templates/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml"
+        dest: "{{ jenkins_home }}/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml"
+      - name: "ssh-key"
+        src: "/vagrant/roles/jenkins/templates/id_rsa"
+        dest: "{{ jenkins_home }}/.ssl/id_rsa"
+      - name: "publish-over-ssh config"
+        src: "/vagrant/roles/jenkins/templates/jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin.xml.j2"
+        dest: "{{ jenkins_home }}/jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin.xml"
+      - name: "credentials plugin config"
+        src: "/vagrant/roles/jenkins/templates/credentials.xml"
+        dest: "{{ jenkins_home }}/credentials.xml"
+      - name: "jenkins secrets master.key"
+        src: "/vagrant/roles/jenkins/templates/master.key"
+        dest: "{{ jenkins_home }}/secrets/master.key"
+      - name: "jenkins secrets hudson.util.Secret"
+        src: "/vagrant/roles/jenkins/templates/hudson.util.Secret"
+        dest: "{{ jenkins_home }}/secrets/hudson.util.Secret"
+      - name: "job BuildGo config"
+        src: "/vagrant/roles/jenkins/templates/config.xml.j2"
+        dest: "{{ jenkins_home }}/jobs/BuildGo/config.xml"
   pre_tasks:
     - apt:
         pkg:

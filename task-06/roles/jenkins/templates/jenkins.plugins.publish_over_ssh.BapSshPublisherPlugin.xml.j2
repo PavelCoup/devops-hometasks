@@ -11,7 +11,7 @@
       <commonConfig class="jenkins.plugins.publish_over_ssh.BapSshCommonConfiguration">
         <secretPassphrase>{AQAAABAAAAAQZUCn8dlWAmcz8huK4Hkf8ltRsm9amyXTbQ+mDWgAq00=}</secretPassphrase>
         <key></key>
-        <keyPath>{{ jenkins_ssl_key_path }}{{ jenkins_ssl_key_file }}</keyPath>
+        <keyPath>{{ jenkins_home }}/.ssl/id_rsa</keyPath>
         <disableAllExec>false</disableAllExec>
       </commonConfig>
       <timeout>300000</timeout>

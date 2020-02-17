@@ -42,10 +42,3 @@ jenkins_proxy_port: ""
 jenkins_proxy_noproxy:
   - "127.0.0.1"
   - "localhost"
-
-jenkins_ip: "192.168.50.10"
-nexus_ip: "192.168.50.11"
-staging_ip: "192.168.50.20"
-production_ip: "192.168.50.21"
-jenkins_ssl_key_path: "{{ jenkins_home }}/.ssl/"
-jenkins_ssl_key_file: "id_rsa"

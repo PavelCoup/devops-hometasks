@@ -4,32 +4,24 @@
 
 - name: Create directory.
   file:
-    path: "{{ item }}"
+    path: "{{ item.dest }}"
     state: directory
     owner: "{{ jenkins_process_user }}"
     group: "{{ jenkins_process_group }}"
     mode: 0775
-  loop:
-     - "{{ jenkins_home }}/jobs/BuildGo"
-     - "{{ jenkins_ssl_key_path }}"
+  loop: "{{ jenkins_folders }}"
+  when: jenkins_folders is defined
 
 - name: configure plugins and jobs
   template:
-    src: "{{ item.name }}"
-    dest: "{{ item.path }}"
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     owner: "{{ jenkins_process_user }}"
     group: "{{ jenkins_process_group }}"
     mode: 0775
     backup: yes
-  loop:
-    - { name: 'org.jenkinsci.plugins.golang.GolangBuildWrapper.xml', path: '{{ jenkins_home }}/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml' }
-    - { name: '{{ jenkins_ssl_key_file }}', path: '{{ jenkins_ssl_key_path }}{{ jenkins_ssl_key_file }}' }
-    - { name: 'jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin.xml.j2', path: '{{ jenkins_home }}/jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin.xml' }
-    - { name: 'credentials.xml', path: '{{ jenkins_home }}/credentials.xml' }
-    - { name: 'master.key', path: '{{ jenkins_home }}/secrets/master.key' }
-    - { name: 'hudson.util.Secret', path: '{{ jenkins_home }}/secrets/hudson.util.Secret' }
-    - { name: 'config.xml.j2', path: '{{ jenkins_home }}/jobs/BuildGo/config.xml' }
-  when: (role_path + '/templates/' + item.name) | is_file
+  loop: "{{ jenkins_files }}"
+  when: jenkins_files is defined
 
 - name: restart jenkins
   service: name=jenkins state=restarted
