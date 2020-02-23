@@ -64,6 +64,10 @@
   debug:
     msg: "{{ version_info.split('\n') }}"
 
+- name: Register nexus version
+  set_fact:
+    nexus_version: "3.20.1-01"
+
 - name: Register nexus package name
   set_fact:
     nexus_package: "nexus-{{ nexus_version }}-unix.tar.gz"

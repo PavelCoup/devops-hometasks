@@ -1,8 +1,8 @@
 SUBNET        = "192.168.50."
 JENKINS_IP    = "#{SUBNET}10"
 NEXUS_IP      = "#{SUBNET}11"
-STAGING_IP    = "#{SUBNET}20"
-PRODUCTION_IP = "#{SUBNET}21"
+STAGING_IP    = "#{SUBNET}30"
+PRODUCTION_IP = "#{SUBNET}40"
 KEY_PUB       = File.read('./rsa/id_rsa.pub')
 
 Vagrant.configure("2") do |config|

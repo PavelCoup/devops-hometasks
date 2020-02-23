@@ -10,6 +10,8 @@
       - github
       - nexus-artifact-uploader
       - publish-over-ssh
+      - Pipeline
+      - ssh-agent
     jenkins_plugins_install_dependencies: true
     jenkins_folders:
       - dest: "{{ jenkins_home }}/jobs/BuildGo/"
@@ -106,6 +108,7 @@
   hosts: staging_production
   become: yes
   roles:
+    - role: "/etc/ansible/roles/java"
     - role: "/etc/ansible/roles/systemd-service"
       systemd_service:
         wordcloud:
@@ -120,5 +123,7 @@
         owner: vagrant
 
     - apt:
-        name: curl
+        pkg: 
+        - curl
+        - git
         state: present
