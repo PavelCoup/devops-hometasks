@@ -33,7 +33,6 @@ pipeline {
             agent any
             steps {
                 git 'https://github.com/L-Eugene/word-cloud-generator.git'
-                git 'https://github.com/PavelCoup/devops-hometasks.git'
             }
         }
         
