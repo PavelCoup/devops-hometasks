@@ -1,0 +1,1 @@
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"D:/KursTestProject/task-06","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"},"/etc/ansible/roles":{"type":"rsync","guestpath":"/etc/ansible/roles","hostpath":"D:/KursTestProject/task-06/roles","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
