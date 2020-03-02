@@ -1,0 +1,84 @@
+Started by user [8mha:////4LitJzcKH/7Het+tfAc/ClxvK6NqxGdXSHLSzESzI1zUAAAAlx+LCAAAAAAAAP9b85aBtbiIQTGjNKU4P08vOT+vOD8nVc83PyU1x6OyILUoJzMv2y+/JJUBAhiZGBgqihhk0NSjKDWzXb3RdlLBUSYGJk8GtpzUvPSSDB8G5tKinBIGIZ+sxLJE/ZzEvHT94JKizLx0a6BxUmjGOUNodHsLgAzWEgZu/dLi1CL9xJTczDwAj6GcLcAAAAA=[0madmin
+Running as SYSTEM
+Building in workspace /var/lib/jenkins/workspace/free
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/L-Eugene/word-cloud-generator.git
+ > git init /var/lib/jenkins/workspace/free # timeout=10
+Fetching upstream changes from https://github.com/L-Eugene/word-cloud-generator.git
+ > git --version # timeout=10
+ > git fetch --tags --force --progress -- https://github.com/L-Eugene/word-cloud-generator.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/L-Eugene/word-cloud-generator.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/L-Eugene/word-cloud-generator.git # timeout=10
+Fetching upstream changes from https://github.com/L-Eugene/word-cloud-generator.git
+ > git fetch --tags --force --progress -- https://github.com/L-Eugene/word-cloud-generator.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
+Checking out Revision 9044d2a6a61a1a4787d60332c370a248df9f216d (refs/remotes/origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 9044d2a6a61a1a4787d60332c370a248df9f216d # timeout=10
+Commit message: "Update Makefile"
+First time build. Skipping changelog.
+[free] $ /bin/sh -xe /tmp/jenkins16578682381148659659.sh
++ export GOPATH=/var/lib/jenkins/workspace/free
++ go env GOPATH
++ export PATH=/var/lib/jenkins/tools/org.jenkinsci.plugins.golang.GolangInstallation/Go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/var/lib/jenkins/workspace/free/bin
++ sed -i s/1.DEVELOPMENT/1.$BUILD_NUMBER/g ./rice-box.go
++ make
+Cleaning up previous builds
+Install godep...
+Restoring dependencies...
+godep: [WARNING]: godep should only be used inside a valid go package directory and
+godep: [WARNING]: may not function correctly. You are probably outside of your $GOPATH.
+godep: [WARNING]:	Current Directory: /var/lib/jenkins/workspace/free
+godep: [WARNING]:	$GOPATH: /var/lib/jenkins/workspace/free
+PASS
+ok  	_/var/lib/jenkins/workspace/free	0.004s
+Creating compiled builds in ./artifacts
+_/var/lib/jenkins/workspace/free/wordyapi
+github.com/GeertJohan/go.rice/embedded
+github.com/daaku/go.zipexe
+github.com/kardianos/osext
+github.com/GeertJohan/go.rice
+github.com/gorilla/mux
+_/var/lib/jenkins/workspace/free
+_/var/lib/jenkins/workspace/free
+_/var/lib/jenkins/workspace/free/wordyapi
+github.com/GeertJohan/go.rice/embedded
+github.com/daaku/go.zipexe
+github.com/kardianos/osext
+github.com/GeertJohan/go.rice
+github.com/gorilla/mux
+_/var/lib/jenkins/workspace/free
+./artifacts:
+total 12
+drwxr-xr-x 2 jenkins jenkins 4096 Feb 29 19:21 linux
+drwxr-xr-x 2 jenkins jenkins 4096 Feb 29 19:21 osx
+drwxr-xr-x 2 jenkins jenkins 4096 Feb 29 19:21 windows
+
+./artifacts/linux:
+total 9744
+-rwxr-xr-x 1 jenkins jenkins 9974313 Feb 29 19:21 word-cloud-generator
+
+./artifacts/osx:
+total 9784
+-rwxr-xr-x 1 jenkins jenkins 10015432 Feb 29 19:21 word-cloud-generator
+
+./artifacts/windows:
+total 9492
+-rwxr-xr-x 1 jenkins jenkins 9719296 Feb 29 19:21 word-cloud-generator
++ md5sum artifacts/linux/word-cloud-generator artifacts/osx/word-cloud-generator artifacts/windows/word-cloud-generator
++ gzip artifacts/linux/word-cloud-generator artifacts/osx/word-cloud-generator artifacts/windows/word-cloud-generator
+Uploading artifact word-cloud-generator.gz started....
+GroupId: 1
+ArtifactId: word-cloud-generator
+Classifier: 
+Type: gz
+Version: 1.1
+File: word-cloud-generator.gz
+Repository:word-cloud-generator
+Uploading: http://nexus:8081/repository/word-cloud-generator/1/word-cloud-generator/1.1/word-cloud-generator-1.1.gz
+Failed to deploy artifacts: Could not transfer artifact 1:word-cloud-generator:gz:1.1 from/to word-cloud-generator (http://nexus:8081/repository/word-cloud-generator): nexus: No address associated with hostname
+ERROR: Uploading file word-cloud-generator.gz failed.
+Finished: FAILURE
