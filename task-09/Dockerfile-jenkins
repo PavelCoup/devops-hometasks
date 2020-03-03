@@ -1,0 +1,13 @@
+FROM debian
+SHELL ["/bin/bash", "-c"]
+RUN apt-get update && apt-get upgrade \
+&& echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
+&& apt-get install -y locales locales-all apt-utils ansible
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+COPY ./playbook-jenkins.yaml /scripts/playbook-jenkins.yaml
+RUN ansible-galaxy install geerlingguy.jenkins \
+&& ansible-playbook /scripts/playbook-jenkins.yaml
+# ENTRYPOINT /etc/init.d/jenkins start
+ENTRYPOINT service jenkins start && tail -F /var/log/jenkins/jenkins.log
