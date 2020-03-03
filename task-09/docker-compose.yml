@@ -13,14 +13,8 @@ services:
       - ./jenkins_files/hudson.util.Secret:/var/lib/jenkins/secrets/hudson.util.Secret
       - ./jenkins_files/master.key:/var/lib/jenkins/secrets/master.key
     ports:
-      - "8080:8080"
+      - "80:8080"
   nexus:
-    # image: sonatype/nexus3:3.20.1
-    # user: root
-    # volumes:
-    #   - ./nexus_files:/scripts
     build:
       context: ./
       dockerfile: Dockerfile-nexus
-    ports:
-      - "8081:8081"
