@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "runing..."
+echo "running..."
 
 # wait for nexus start
 until [[ -n $(cat /nexus-data/log/nexus.log | grep "Started Sonatype Nexus") ]]
