@@ -2,7 +2,10 @@ FROM debian
 SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get upgrade \
 && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
-&& apt-get install -y locales locales-all apt-utils ansible
+&& apt-get install -y locales locales-all apt-utils curl ansible apt-transport-https \
+ca-certificates gnupg2 software-properties-common \
+&& curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
+&& add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
@@ -10,14 +13,7 @@ COPY ./playbook-jenkins.yaml /scripts/playbook-jenkins.yaml
 RUN ansible-galaxy install geerlingguy.jenkins \
 && ansible-galaxy install geerlingguy.java \
 && ansible-playbook /scripts/playbook-jenkins.yaml
-RUN apt-get install -y apt-transport-https ca-certificates gnupg2 software-properties-common \
-&& curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
-&& add-apt-repository \
-"deb [arch=amd64] https://download.docker.com/linux/debian \
-$(lsb_release -cs) \
-stable" \
-&& apt-get update \
-&& apt-get install -y docker-ce docker-ce-cli containerd.io
+RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 RUN usermod -a -G docker jenkins
 RUN sed -i 's/<workspaceDir>\${JENKINS_HOME}/<workspaceDir>\/tmp/g' /var/lib/jenkins/config.xml
 COPY ./jenkins_files/entrypoint.sh /scripts/entrypoint.sh
