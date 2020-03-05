@@ -1,23 +1,6 @@
 version: '3'
 
 services:
-  jenkins:
-    build:
-      context: ./
-      dockerfile: Dockerfile-jenkins
-    container_name: jenkins
-    volumes:
-      - ./jenkins_files/final_pipeline:/var/lib/jenkins/jobs/final_pipeline
-      - ./jenkins_files/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml:/var/lib/jenkins/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml
-      - ./jenkins_files/credentials.xml:/var/lib/jenkins/credentials.xml
-      - ./jenkins_files/hudson.util.Secret:/var/lib/jenkins/secrets/hudson.util.Secret
-      - ./jenkins_files/master.key:/var/lib/jenkins/secrets/master.key
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp
-    networks:
-      - project_net
-    ports:
-      - "80:8080"
   nexus:
     build:
       context: ./
@@ -25,5 +8,26 @@ services:
     container_name: nexus
     networks:
       - project_net
+  jenkins:
+    build:
+      context: ./
+      dockerfile: Dockerfile-jenkins
+    container_name: jenkins
+    volumes:
+      - ./jenkins_files/final_pipeline:/var/lib/jenkins/jobs/final_pipeline
+      - ./jenkins_files/pipeline:/var/lib/jenkins/jobs/pipeline
+      - ./jenkins_files/free:/var/lib/jenkins/jobs/free
+      - ./jenkins_files/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml:/var/lib/jenkins/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml
+      - ./jenkins_files/credentials.xml:/var/lib/jenkins/credentials.xml
+      - ./jenkins_files/hudson.util.Secret:/var/lib/jenkins/secrets/hudson.util.Secret
+      - ./jenkins_files/master.key:/var/lib/jenkins/secrets/master.key
+      - /var/run/docker.sock:/var/run/docker.sock
+      - workspace:/workspace
+    networks:
+      - project_net
+    ports:
+      - "80:8080"
 networks: 
   project_net:
+volumes:
+  workspace:

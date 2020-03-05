@@ -15,6 +15,6 @@ RUN ansible-galaxy install geerlingguy.jenkins \
 && ansible-playbook /scripts/playbook-jenkins.yaml
 RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 RUN usermod -a -G docker jenkins
-RUN sed -i 's/<workspaceDir>\${JENKINS_HOME}/<workspaceDir>\/tmp/g' /var/lib/jenkins/config.xml
+# RUN sed -i 's/<workspaceDir>\${JENKINS_HOME}/<workspaceDir>\/tmp/g' /var/lib/jenkins/config.xml
 COPY ./jenkins_files/entrypoint.sh /scripts/entrypoint.sh
 ENTRYPOINT /scripts/entrypoint.sh

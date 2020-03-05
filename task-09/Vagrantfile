@@ -1,27 +1,26 @@
 Vagrant.configure("2") do |config|
 	
-	required_plugins = %w( vagrant-vbguest vagrant-disksize )
-    _retry = false
-    required_plugins.each do |plugin|
-        unless Vagrant.has_plugin? plugin
-            system "vagrant plugin install #{plugin}"
-            _retry=true
-        end
-    end
+	# required_plugins = %w( vagrant-vbguest vagrant-disksize )
+ #    _retry = false
+ #    required_plugins.each do |plugin|
+ #        unless Vagrant.has_plugin? plugin
+ #            system "vagrant plugin install #{plugin}"
+ #            _retry=true
+ #        end
+ #    end
 
-    if (_retry)
-        exec "vagrant " + ARGV.join(' ')
-    end
-	
-	if Vagrant.has_plugin?("vagrant-vbguest")
-	config.vbguest.auto_update = false  
-	end
+ #    if (_retry)
+ #        exec "vagrant " + ARGV.join(' ')
+ #    end
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false  
+  end
 
 	config.vm.box = "ubuntu/bionic64"
 	config.disksize.size = '20GB'
 	config.vm.hostname = "learning-devops"
 	
-	config.vm.network "forwarded_port", guest: 8080, host: 8080
+	config.vm.network "forwarded_port", guest: 80, host: 8080
 	config.vm.network "forwarded_port", guest: 8081, host: 8081
 
 	config.vm.provider "virtualbox" do |vb|
