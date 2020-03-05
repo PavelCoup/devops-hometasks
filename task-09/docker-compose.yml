@@ -15,8 +15,6 @@ services:
     container_name: jenkins
     volumes:
       - ./jenkins_files/final_pipeline:/var/lib/jenkins/jobs/final_pipeline
-      - ./jenkins_files/pipeline:/var/lib/jenkins/jobs/pipeline
-      - ./jenkins_files/free:/var/lib/jenkins/jobs/free
       - ./jenkins_files/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml:/var/lib/jenkins/org.jenkinsci.plugins.golang.GolangBuildWrapper.xml
       - ./jenkins_files/credentials.xml:/var/lib/jenkins/credentials.xml
       - ./jenkins_files/hudson.util.Secret:/var/lib/jenkins/secrets/hudson.util.Secret
