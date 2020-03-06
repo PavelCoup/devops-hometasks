@@ -1,4 +1,4 @@
-FROM debian
+FROM debian:buster
 SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get upgrade \
 && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
