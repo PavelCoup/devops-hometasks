@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian
 SHELL ["/bin/bash", "-c"]
 RUN apt-get update && apt-get upgrade \
 && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
@@ -17,4 +17,5 @@ RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 RUN usermod -a -G docker jenkins
 # RUN sed -i 's/<workspaceDir>\${JENKINS_HOME}/<workspaceDir>\/tmp/g' /var/lib/jenkins/config.xml
 COPY ./jenkins_files/entrypoint.sh /scripts/entrypoint.sh
+RUN mkdir /workspace && chmod -R 777 /workspace
 ENTRYPOINT /scripts/entrypoint.sh
